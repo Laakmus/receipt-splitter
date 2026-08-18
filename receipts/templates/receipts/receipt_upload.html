@@ -1,0 +1,7 @@
+<h1> Add receipt</h1>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Run</button>
+</form>
