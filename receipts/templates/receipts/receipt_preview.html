@@ -2,33 +2,34 @@
 {% block title %}Paragon {{ receipt.store }}{% endblock %}
 
 {% block content %}
-<h1>Paragon: {{ receipt.store }} — {{ receipt.created_at|date:"d.m.Y H:i" }}</h1>
+<h1>{{ receipt.store }} — {{ receipt.created_at|date:"d.m.Y H:i" }}</h1>
 
-<form method="post" class="inline">
-    {% csrf_token %}
-    <input type="hidden" name="action" value="add_person">
-    <input type="text" name="person_name" placeholder="imię" required>
-    <button type="submit">Dodaj osobę</button>
-</form>
+<div class="people-bar">
+    <form method="post" class="inline">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_person">
+        <input type="text" name="person_name" placeholder="imię" required>
+        <button type="submit">Dodaj osobę</button>
+    </form>
 
-{% if people %}
-    <span class="muted">
-        Osoby:
-        {% for person in people %}
+    {% for person in people %}
+        <span class="person-chip">
             {{ person.name }}
             <form method="post" class="inline">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="delete_person">
                 <input type="hidden" name="person_id" value="{{ person.pk }}">
-                <button type="submit" title="usuń osobę">×</button>
+                <button type="submit" class="small" title="usuń osobę">×</button>
             </form>
-        {% endfor %}
-    </span>
-{% endif %}
+        </span>
+    {% empty %}
+        <span class="muted">Nie ma jeszcze żadnej osoby — dodaj przynajmniej jedną.</span>
+    {% endfor %}
+</div>
 
 {% if asked_to_compute and missing %}
     <div class="warn">
-        Nie policzę — te pozycje nie mają zaznaczonej żadnej osoby:
+        <strong>Nie policzę.</strong> Te pozycje nie mają zaznaczonej żadnej osoby:
         {% for item in missing %}{{ item.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
     </div>
 {% endif %}
@@ -38,37 +39,48 @@
     <input type="hidden" name="action" value="compute">
 
     <table>
-        <tr>
-            <th>#</th>
-            <th>Pozycja</th>
-            <th class="num">Kwota</th>
-            {% for person in people %}<th class="check">{{ person.name }}</th>{% endfor %}
-        </tr>
-        {% for row in rows %}
+        <thead>
             <tr>
-                <td class="num">{{ row.item.position }}</td>
-                <td>
-                    {{ row.item.name }}
-                    <span class="muted">
-                        ({{ row.item.quantity|floatformat:"-3" }} x {{ row.item.unit_price }}{% if row.item.had_discount %} − {{ row.item.discount_amount }} rabatu{% endif %}{% if row.item.had_deposit %} + {{ row.item.deposit_amount }} kaucji{% endif %})
-                    </span>
-                </td>
-                <td class="num">{{ row.item.final_total }}</td>
-                {% for person, is_checked in row.checks %}
-                    <td class="check">
-                        <input type="checkbox" name="item_{{ row.item.pk }}" value="{{ person.pk }}" {% if is_checked %}checked{% endif %}>
-                    </td>
-                {% endfor %}
+                <th class="num">#</th>
+                <th>Pozycja</th>
+                <th class="num">Kwota</th>
+                {% for person in people %}<th class="check">{{ person.name }}</th>{% endfor %}
             </tr>
-        {% empty %}
-            <tr><td colspan="3">Nie wykryto pozycji na paragonie</td></tr>
-        {% endfor %}
+        </thead>
+        <tbody>
+            {% for row in rows %}
+                <tr>
+                    <td class="num">{{ row.item.position }}</td>
+                    <td>
+                        {{ row.item.name }}
+                        <span class="muted">
+                            ({{ row.item.quantity|floatformat:"-3" }} × {{ row.item.unit_price }}{% if row.item.had_discount %} − {{ row.item.discount_amount }} rabatu{% endif %}{% if row.item.had_deposit %} + {{ row.item.deposit_amount }} kaucji{% endif %})
+                        </span>
+                    </td>
+                    <td class="num">{{ row.item.final_total }}</td>
+                    {% for person, is_checked in row.checks %}
+                        <td class="check">
+                            <input type="checkbox" name="item_{{ row.item.pk }}" value="{{ person.pk }}" {% if is_checked %}checked{% endif %}>
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% empty %}
+                <tr><td colspan="3">Nie wykryto pozycji na paragonie</td></tr>
+            {% endfor %}
+
+            {% if rows %}
+                <tr class="summary">
+                    <td></td>
+                    <td>Razem (pozycji: {{ rows|length }})</td>
+                    <td class="num">{{ receipt_total }}</td>
+                    {% for person in people %}<td></td>{% endfor %}
+                </tr>
+            {% endif %}
+        </tbody>
     </table>
 
     {% if people %}
         <button type="submit">Policz</button>
-    {% else %}
-        <p class="muted">Dodaj przynajmniej jedną osobę, żeby zaznaczać pozycje.</p>
     {% endif %}
 </form>
 
@@ -81,7 +93,7 @@
     </table>
 {% endif %}
 
-<p class="muted">
+<p class="muted" style="margin-top: 2rem;">
     <a href="{% url 'receipt-delete' receipt.pk %}">Usuń ten paragon</a>
 </p>
 {% endblock %}
