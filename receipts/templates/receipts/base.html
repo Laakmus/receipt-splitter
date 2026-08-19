@@ -2,39 +2,159 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
     <title>{% block title %}Receipt Splitter{% endblock %}</title>
     <style>
-        :root {
-            --bg: #fff; --fg: #222; --muted: #666; --line: #ddd; --head: #f4f4f4;
-            --warn-bg: #fff4e5; --warn-line: #ffb84d; --ok-bg: #eef7ee; --ok-line: #99cc99;
+        /* Jasny wyglad niezaleznie od motywu systemowego - paragon czyta sie jak na papierze */
+        html { color-scheme: light; }
+
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+            font-size: 17px;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0 0 3rem;
+            background: #f6f7f9;
+            color: #1a1a1a;
         }
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg: #1c1c1c; --fg: #e8e8e8; --muted: #a0a0a0; --line: #3a3a3a; --head: #2a2a2a;
-                --warn-bg: #3a2e1a; --warn-line: #8a6d3b; --ok-bg: #1e2f1e; --ok-line: #4d7a4d;
-            }
+
+        .page { max-width: 1000px; margin: 0 auto; padding: 0 1.5rem; }
+
+        /* --- gorne menu --- */
+        nav {
+            background: #2b5f9e;
+            padding: 0.9rem 0;
+            margin-bottom: 2rem;
         }
-        body { font-family: system-ui, sans-serif; margin: 2rem; background: var(--bg); color: var(--fg); }
-        h1 { font-size: 1.4rem; }
-        table { border-collapse: collapse; margin: 1rem 0; }
-        th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; }
-        th { background: var(--head); }
-        td.num, th.num { text-align: right; }
-        td.check { text-align: center; }
-        .muted { color: var(--muted); font-size: 0.9rem; }
-        .warn { background: var(--warn-bg); border: 1px solid var(--warn-line); padding: 10px; margin: 1rem 0; }
-        .totals { background: var(--ok-bg); border: 1px solid var(--ok-line); padding: 10px 14px; display: inline-block; }
-        .totals td { border: none; padding: 3px 14px 3px 0; }
+        nav .page { display: flex; gap: 1.5rem; align-items: center; }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 17px;
+            padding: 0.35rem 0.8rem;
+            border-radius: 6px;
+        }
+        nav a:hover { background: rgba(255, 255, 255, 0.18); }
+
+        h1 { font-size: 1.6rem; margin: 0 0 1.2rem; }
+        h2 { font-size: 1.25rem; margin: 2rem 0 0.8rem; }
+
+        /* --- tabele --- */
+        table {
+            border-collapse: collapse;
+            background: #fff;
+            width: 100%;
+            margin: 1rem 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td { border-bottom: 1px solid #e3e5e8; padding: 10px 14px; text-align: left; }
+        th { background: #eef1f5; font-size: 15px; text-transform: uppercase; letter-spacing: 0.03em; }
+        tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: #fafbfc; }
+        td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+        td.check, th.check { text-align: center; }
+        input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
+
+        /* --- wiersz sumy paragonu --- */
+        tr.summary td {
+            background: #eef1f5;
+            font-weight: 700;
+            font-size: 1.05rem;
+            border-top: 2px solid #2b5f9e;
+        }
+
+        /* --- przyciski --- */
+        button, .btn {
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 0.5rem 1.1rem;
+            border: none;
+            border-radius: 6px;
+            background: #2b5f9e;
+            color: #fff;
+            cursor: pointer;
+        }
+        button:hover, .btn:hover { background: #23507f; }
+        button.small {
+            padding: 0.15rem 0.5rem;
+            font-size: 14px;
+            background: #d9dde3;
+            color: #444;
+        }
+        button.small:hover { background: #c3c9d1; }
+
+        input[type="text"], input[type="file"] {
+            font-family: inherit;
+            font-size: 16px;
+            padding: 0.45rem 0.7rem;
+            border: 1px solid #c3c9d1;
+            border-radius: 6px;
+            background: #fff;
+        }
+
+        /* --- pasek osob --- */
+        .people-bar {
+            background: #fff;
+            border: 1px solid #e3e5e8;
+            border-radius: 8px;
+            padding: 0.9rem 1.1rem;
+            margin: 1rem 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            align-items: center;
+        }
+        .person-chip {
+            background: #eef1f5;
+            border-radius: 20px;
+            padding: 0.2rem 0.4rem 0.2rem 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+        }
+
+        .muted { color: #5c6470; font-size: 15px; }
+
+        .warn {
+            background: #fff4e0;
+            border-left: 5px solid #e8931f;
+            padding: 0.9rem 1.1rem;
+            border-radius: 6px;
+            margin: 1.2rem 0;
+        }
+
+        .totals {
+            background: #fff;
+            border-left: 5px solid #2e8b46;
+            border-radius: 6px;
+            padding: 0.6rem 1.4rem;
+            display: inline-block;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            width: auto;
+        }
+        .totals td { border: none; padding: 6px 1.5rem 6px 0; font-size: 1.1rem; }
+        .totals tr:hover { background: none; }
+
         form.inline { display: inline; }
-        nav a { margin-right: 1rem; }
+        a { color: #2b5f9e; }
     </style>
 </head>
 <body>
 <nav>
-    <a href="{% url 'receipt-upload' %}">Wgraj paragon</a>
-    <a href="{% url 'receipt-list' %}">Wszystkie paragony</a>
+    <div class="page">
+        <a href="{% url 'receipt-upload' %}">Wgraj paragon</a>
+        <a href="{% url 'receipt-list' %}">Wszystkie paragony</a>
+    </div>
 </nav>
-<hr>
+
+<div class="page">
 {% block content %}{% endblock %}
+</div>
 </body>
 </html>

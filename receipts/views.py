@@ -64,6 +64,7 @@ def receipt_preview(request, pk):
         checked = {person.pk for person in item.shared_by.all()}
         rows.append({'item': item, 'checks': [(person, person.pk in checked) for person in people]})
 
+    receipt_total = sum(item.final_total for item in positions)
     missing = unassigned_items(receipt)
     totals = None
     if request.GET.get("policz") and people and not missing:
@@ -73,6 +74,7 @@ def receipt_preview(request, pk):
     return render(request, 'receipts/receipt_preview.html', {
         'receipt': receipt,
         'rows': rows,
+        'receipt_total': receipt_total,
         'people': people,
         'missing': missing,
         'totals': totals,

@@ -6,7 +6,7 @@
 
 <p>
     {{ receipt.store }} — {{ receipt.created_at|date:"d.m.Y H:i" }},
-    {{ receipt.line_items.count }} pozycji.
+    pozycji: {{ receipt.line_items.count }}.
 </p>
 <p class="muted">Znikną też wszystkie pozycje i osoby przypisane do tego paragonu.</p>
 
