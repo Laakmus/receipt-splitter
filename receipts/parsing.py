@@ -9,6 +9,10 @@ class ParsedItem:
     quantity: Decimal
     unit_price: Decimal
     total: Decimal
+    pre_discount_total: Decimal | None = None
+    deposit_amount: Decimal | None = None
+    had_discount: bool = False
+    had_deposit: bool = False
 
 
 PIECES_FORM = re.compile(
@@ -99,6 +103,8 @@ def fit_price_to_item(data: list) -> list[ParsedItem]:
             continue
         if i + 2 < len(data):
             if "Rabat" in data[i+1]:
+                new_item.had_discount = True
+                new_item.pre_discount_total = new_item.total
                 new_item.total = to_decimal(data[i+2].strip())
         new_list.append(new_item)
     return new_list
@@ -112,13 +118,18 @@ def merge_deposits(data_list: list[ParsedItem]) -> list[ParsedItem]:
     new_data: list[ParsedItem] = []
     data = data_list[::-1]
     new_total = 0
+    deposit = 0
     for i, item in enumerate(data):
         if "kaucja" in item.name.lower():
+            deposit = item.total
             new_total= item.total + data[i+1].total
             continue
         if new_total != 0:
+            item.had_deposit = True
+            item.deposit_amount = deposit
             item.total = new_total
             new_total = 0
+            deposit = 0
         new_data.append(item)
 
     return new_data[::-1]
