@@ -1,7 +1,14 @@
-<h1> Add receipt</h1>
+{% extends "receipts/base.html" %}
+{% block title %}Wgraj paragon{% endblock %}
+
+{% block content %}
+<h1>Wgraj paragon</h1>
 
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Run</button>
+    <button type="submit">Wgraj i odczytaj</button>
 </form>
+
+<p class="muted">Plik PDF z Biedronki. Odczyt zajmuje kilka sekund.</p>
+{% endblock %}

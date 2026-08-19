@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Receipt, Person, LineItem
+
+from .models import LineItem, Person, Receipt
 
 admin.site.register(Receipt)
 admin.site.register(Person)
