@@ -36,10 +36,20 @@ class LineItem(models.Model):
     unit_price = models.DecimalField(decimal_places=2, max_digits=10, null=True, blank=True)
     pre_discount_total = models.DecimalField(decimal_places=2, max_digits=10, null=True, blank=True)
     final_total = models.DecimalField(decimal_places=2, max_digits=10)
+    deposit_amount = models.DecimalField(decimal_places=2, max_digits=10, null=True, blank=True)
     had_discount = models.BooleanField(default=False)
     had_deposit = models.BooleanField(default=False)
     parse_warning = models.TextField(blank=True)
     shared_by = models.ManyToManyField(Person, related_name='line_items', blank=True)
+
+    @property
+    def discount_amount(self):
+        """Kwota rabatu — różnica między ceną przed obniżką a finalną."""
+        if self.pre_discount_total is None:
+            return None
+        # final_total zawiera juz doliczona kaucje - odejmujemy ja, zeby zostala sama cena towaru
+        cena_towaru = self.final_total - (self.deposit_amount or 0)
+        return self.pre_discount_total - cena_towaru
 
     def __str__(self):
         return self.name

@@ -1,0 +1,15 @@
+<h1>Paragon: {{ receipt.store }} - {{ receipt.created_at }}</h1>
+
+<ul>
+    {% for position in positions %}
+        <li>
+            {{ position.name }}:
+            ({{ position.quantity|floatformat:"-3" }} x {{ position.unit_price }})
+            {% if position.had_discount %} - {{ position.discount_amount }}{% endif %}
+            {% if position.had_deposit %} + {{ position.deposit_amount }}{% endif %}
+            = {{ position.final_total }}
+        </li>
+    {% empty %}
+        <li>Nie wykryto pozycji na paragonie</li>
+    {% endfor %}
+</ul>
