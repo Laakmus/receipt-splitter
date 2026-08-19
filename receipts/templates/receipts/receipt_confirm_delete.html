@@ -1,0 +1,18 @@
+{% extends "receipts/base.html" %}
+{% block title %}Usunąć paragon?{% endblock %}
+
+{% block content %}
+<h1>Usunąć ten paragon?</h1>
+
+<p>
+    {{ receipt.store }} — {{ receipt.created_at|date:"d.m.Y H:i" }},
+    {{ receipt.line_items.count }} pozycji.
+</p>
+<p class="muted">Znikną też wszystkie pozycje i osoby przypisane do tego paragonu.</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Tak, usuń</button>
+    <a href="{% url 'receipt-preview' receipt.pk %}">Anuluj</a>
+</form>
+{% endblock %}

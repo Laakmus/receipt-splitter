@@ -1,9 +1,16 @@
-import pytest
-
-from receipts.parsing import merge_deposits, clean_lines, to_decimal, find_items_section, fit_price_to_item, \
-    parse_product_line, ParsedItem
 from decimal import Decimal
 
+import pytest
+
+from receipts.parsing import (
+    ParsedItem,
+    clean_lines,
+    find_items_section,
+    fit_price_to_item,
+    merge_deposits,
+    parse_product_line,
+    to_decimal,
+)
 
 
 def test_find_items_section_skips_header_and_summary(raw_ocr_text):

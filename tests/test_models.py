@@ -1,5 +1,8 @@
+from decimal import Decimal
+
 import pytest
-from receipts.models import Receipt, LineItem, Person
+
+from receipts.models import LineItem, Person, Receipt
 
 
 @pytest.mark.django_db
@@ -68,3 +71,35 @@ def test_delete_receipt_cascade():
 
 
 
+
+
+@pytest.mark.django_db
+def test_str_shows_readable_names():
+    receipt = Receipt.objects.create(uploaded_file="receipt_1.pdf")
+    person = Person.objects.create(name="Agata", receipt=receipt)
+    item = LineItem.objects.create(receipt=receipt, position=1, name="Mleko", final_total=100)
+
+    assert str(receipt) == "Biedronka"
+    assert str(person) == "Agata"
+    assert str(item) == "Mleko"
+
+
+@pytest.mark.django_db
+def test_discount_amount_is_none_without_discount():
+    receipt = Receipt.objects.create(uploaded_file="receipt_1.pdf")
+    item = LineItem.objects.create(receipt=receipt, position=1, name="Mleko",
+                                   final_total=Decimal("3.49"))
+
+    assert item.discount_amount is None
+
+
+@pytest.mark.django_db
+def test_discount_amount_ignores_deposit():
+    receipt = Receipt.objects.create(uploaded_file="receipt_1.pdf")
+    # cena 29,88 -> rabat 7,50 -> 22,38, do tego 6,00 kaucji = 28,38 w final_total
+    item = LineItem.objects.create(receipt=receipt, position=1, name="Cola",
+                                   pre_discount_total=Decimal("29.88"),
+                                   deposit_amount=Decimal("6.00"),
+                                   final_total=Decimal("28.38"))
+
+    assert item.discount_amount == Decimal("7.50")
