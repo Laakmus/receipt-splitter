@@ -13,7 +13,7 @@ URL="http://127.0.0.1:$PORT/"
 if [ -f "$PID_FILE" ]; then
     PID=$(cat "$PID_FILE")
     if kill -0 "$PID" 2>/dev/null; then
-        echo "Zatrzymuję aplikację..."
+        echo "=== ZATRZYMUJĘ aplikację ==="
         # runserver uruchamia proces potomny - zabijamy cala grupe
         pkill -P "$PID" 2>/dev/null
         kill "$PID" 2>/dev/null
@@ -26,8 +26,20 @@ if [ -f "$PID_FILE" ]; then
     rm -f "$PID_FILE"
 fi
 
+# Serwer moze dzialac po zamknieciu okna Terminala - wtedy nie ma pliku PID,
+# ale port jest zajety. Traktujemy to tak samo jak zwykle zatrzymanie.
+ORPHAN=$(lsof -ti tcp:$PORT -sTCP:LISTEN 2>/dev/null | head -1)
+if [ -n "$ORPHAN" ]; then
+    echo "Aplikacja działała w tle po zamkniętym oknie — zatrzymuję ją."
+    kill "$ORPHAN" 2>/dev/null
+    sleep 1
+    echo "Zatrzymane. Kliknij ikonkę ponownie, żeby uruchomić."
+    sleep 3
+    exit 0
+fi
+
 echo "======================================"
-echo "  Receipt Splitter — uruchamianie"
+echo "  URUCHAMIAM Receipt Splitter"
 echo "======================================"
 echo
 
@@ -95,7 +107,16 @@ echo "Przygotowuję bazę danych..."
 
 echo "Uruchamiam aplikację..."
 .venv/bin/python manage.py runserver "127.0.0.1:$PORT" --noreload > /tmp/receipt-splitter.log 2>&1 &
-echo $! > "$PID_FILE"
+SERVER_PID=$!
+echo "$SERVER_PID" > "$PID_FILE"
+
+# Zamkniecie okna Terminala, Ctrl+C albo koniec skryptu zatrzymuja serwer.
+# Bez tego serwer zostawalby w tle jako proces osierocony.
+cleanup() {
+    kill "$SERVER_PID" 2>/dev/null
+    rm -f "$PID_FILE"
+}
+trap cleanup EXIT HUP INT TERM
 
 # czekamy az serwer zacznie odpowiadac - do 30 sekund
 for _ in $(seq 1 60); do
@@ -123,7 +144,12 @@ echo
 echo "Przeglądarka powinna otworzyć się sama."
 echo "Gdyby nie: wejdź na $URL"
 echo
-echo "Żeby ZATRZYMAĆ aplikację — kliknij tę samą ikonkę jeszcze raz."
-echo "To okno możesz zamknąć, aplikacja będzie działać dalej."
+echo "  To okno musi pozostać otwarte."
 echo
-sleep 3
+echo "  Żeby ZATRZYMAĆ aplikację, zrób jedno z dwóch:"
+echo "    • zamknij to okno (krzyżyk) albo naciśnij Ctrl+C"
+echo "    • kliknij ikonkę ReceiptSplitter jeszcze raz"
+echo
+
+# Skrypt czeka na serwer - dzieki temu zamkniecie okna uruchamia cleanup
+wait "$SERVER_PID"
