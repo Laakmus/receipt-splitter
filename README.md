@@ -33,6 +33,14 @@ Grosze z zaokrąglenia trafiają do pierwszych osób na liście, więc **suma ud
 
 ## Uruchomienie
 
+### Jednym kliknięciem (macOS)
+
+Dwuklik na **`ReceiptSplitter.command`** w Finderze uruchamia aplikację i otwiera przeglądarkę. Ponowne kliknięcie tej samej ikonki ją zatrzymuje.
+
+Przy **pierwszym** uruchomieniu skrypt sprawdza, czego brakuje na komputerze, i doinstalowuje to sam: Homebrew, Pythona 3.13 oraz tesseract z polskim pakietem językowym. Trwa to kilkanaście minut i wymaga podania hasła do Maca (przy instalacji Homebrew) — okno terminala pokazuje postęp. Kolejne uruchomienia zajmują kilka sekund.
+
+W tym trybie aplikacja używa SQLite, czyli bazy zapisanej w jednym pliku obok projektu — nie trzeba instalować ani uruchamiać PostgreSQL.
+
 ### Docker
 
 ```bash
