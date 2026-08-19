@@ -1,6 +1,15 @@
 [tool.ruff]
 exclude = ["**/migrations"]
+line-length = 120
+
+[tool.ruff.lint]
+# E/F - bledy i niepoprawny kod, I - kolejnosc importow, UP - przestarzale konstrukcje
+select = ["E", "F", "I", "UP"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py"]
+addopts = "--strict-markers"
+markers = [
+    "slow: testy uruchamiajace prawdziwy OCR (tesseract)",
+]
