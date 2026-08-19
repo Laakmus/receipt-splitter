@@ -82,3 +82,20 @@ def test_merge_deposits_adds_deposit_to_drink():
 
 
 
+
+
+def test_parse_product_line_accepts_space_instead_of_decimal_separator():
+    """OCR na Linuksie odczytal '2,69' jako '2 69' - pozycja nie moze przez to zniknac."""
+    line = "JOgPItI ruskrruv+UUgN e 1.000 x 2 69 2.69"
+
+    item = parse_product_line(line)
+
+    assert item is not None
+    assert item.unit_price == Decimal("2.69")
+    assert item.total == Decimal("2.69")
+
+
+def test_to_decimal_handles_all_three_separators():
+    assert to_decimal("2,69") == Decimal("2.69")
+    assert to_decimal("2.69") == Decimal("2.69")
+    assert to_decimal("2 69") == Decimal("2.69")

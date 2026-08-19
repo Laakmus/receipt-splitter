@@ -15,20 +15,24 @@ class ParsedItem:
     had_deposit: bool = False
 
 
+# OCR czasem gubi separator dziesietny i zostawia spacje ("2 69" zamiast "2,69"),
+# wiec kazda z tych trzech postaci jest dopuszczalna
+NUMBER = r"\d+[.,\s]\d+"
+
 PIECES_FORM = re.compile(
      r"^(.+?)" # name
      r"\s+" # space
      r"\S+" # PTU
      r"\s+"
-     r"(\d+[.,]\d+)" # quantity
+     rf"({NUMBER})" # quantity
      r"\s+x\s+"
-     r"(\d+[.,]\d+)" # unit price
+     rf"({NUMBER})" # unit price
      r"\s+"
-     r"(\d+[.,]\d+)$" # total price
+     rf"({NUMBER})$" # total price
 )
 
 PRICE_FORM = re.compile(
-    r"^(\d+[.,]\d+)$"
+    rf"^({NUMBER})$"
 )
 
 
@@ -36,11 +40,12 @@ PRICE_FORM = re.compile(
 
 
 def to_decimal(s: str) -> Decimal:
-    """Turn a price written with a comma into a Decimal.
+    """Turn a price written with a comma or a stray space into a Decimal.
 
     Built from text, never from float, so no rounding error is carried over.
     """
-    s = s.replace(",", ".")
+    # spacja w srodku liczby to zgubiony przez OCR separator, nie odstep
+    s = s.replace(" ", ".").replace(",", ".")
     return Decimal(s)
 
 
